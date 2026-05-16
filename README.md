@@ -15,18 +15,20 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 > **⚠️ Sinh viên: Điền thông tin nhóm vào bảng dưới đây trước khi nộp bài.**
 
-|              | Thông tin                    |
-| ------------ | ---------------------------- |
-| **Tên nhóm** | `<!-- VD: Nhóm 1 -->`        |
-| **Lớp**      | `<!-- VD: SE001.P11 -->`     |
-| **Học kỳ**   | `<!-- VD: HK2 2025-2026 -->` |
+| | Thông tin |
+|---|---|
+| **Tên nhóm** | `Nhóm 20` |
+| **Lớp** | `ICT.1` |
+| **Học kỳ** | `HK2 2025-2026` |
 
-| #   | MSSV | Họ và tên | Vai trò     |
-| --- | ---- | --------- | ----------- |
-| 1   |      |           | Nhóm trưởng |
-| 2   |      |           | Thành viên  |
-| 3   |      |           | Thành viên  |
-| 4   |      |           | Thành viên  |
+| # | MSSV | Họ và tên | Vai trò |
+|---|------|-----------|---------|
+| 1 | 2411042 | Nguyễn Đinh Phú Vinh | Nhóm trưởng |
+| 2 | 2411117 | Nguyễn Đăng Đạt | Thành viên |
+| 3 | 2411136 | Dương Minh Đức | Thành viên |
+| 4 | 2411040 | Nguyễn Tuấn Vinh | Thành viên |
+| 5 | 2411032 | Đỗ Minh Tấn | Thành viên |
+
 
 ---
 
