@@ -1,64 +1,50 @@
 """
-Logout & Language Tests (*Kiểm thử Đăng xuất & Chuyển ngôn ngữ*) — Library Book Borrowing System (*Hệ thống Mượn sách thư viện*)
+Logout & Language Tests (*Kiểm thử Đăng xuất & Chuyển ngôn ngữ*) — Library Book Borrowing System
 
 Students must complete ALL 2 test cases in this file.
 (*Sinh viên cần hoàn thành TẤT CẢ 2 test case trong file này.*)
-
-Hints (*Gợi ý*):
-    - Use login() helper to log in (*Dùng login() helper để đăng nhập*)
-    - Logout button: 'flt-semantics[role="button"]:has-text("Đăng xuất")'
-      (*Nút Đăng xuất*)
-    - Language switch EN button: 'flt-semantics[role="button"]:has-text("EN")'
-      (*Nút chuyển ngôn ngữ EN*)
-    - After logout: page returns to login (has "Đăng nhập" button and "Email" input)
-      (*Sau đăng xuất: trang quay về login*)
-    - After switching to EN: text "Logout", "Borrow", "Search", "Library" may appear
-      (*Sau chuyển EN: text tiếng Anh có thể xuất hiện*)
 """
 import os
-import time
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
-    login, SCREENSHOT_DIR,
+    wait_for_flutter, login, SCREENSHOT_DIR,
 )
 
 
 def test_logout(page, test_config):
-    """TC-11: Logout success (*Đăng xuất thành công*)
+    """TC-11: Đăng xuất thành công"""
+    # Arrange: Đăng nhập
+    login(page, test_config)
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    # Act: Click nút "Đăng xuất"
+    flutter_click_button(page, "Đăng xuất")
+    page.wait_for_timeout(3000)
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "logout_success.png"))
 
-    Description (*Mô tả*):
-        Log in → click Logout → verify page returns to login screen.
-        (*Đăng nhập → click Đăng xuất → kiểm tra quay về trang đăng nhập.*)
-
-    Suggested steps (*Gợi ý*):
-        1. login(page, test_config)
-        2. Find "Đăng xuất" button and click (*Tìm nút "Đăng xuất" và click*)
-        3. Wait 3s, re-enable semantics (*Đợi 3s, bật lại semantics*)
-        4. Assert: "Đăng nhập" button or Email input exists
-           (*Assert: có nút "Đăng nhập" hoặc ô input Email*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Assert: Quay về trang đăng nhập (có "Đăng nhập" hoặc ô input Email)
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    has_login_btn = "Đăng nhập" in sem_text
+    has_email_field = page.locator('input[aria-label="Email"]').count() > 0
+    assert has_login_btn or has_email_field, \
+        "TC-11 FAIL: Sau khi đăng xuất không quay về trang đăng nhập"
 
 
 def test_switch_language_to_english(page, test_config):
-    """TC-12: Switch language to English (*Chuyển ngôn ngữ sang tiếng Anh*)
+    """TC-12: Chuyển ngôn ngữ sang tiếng Anh"""
+    # Arrange: Đăng nhập
+    login(page, test_config)
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    # Act: Click nút "EN"
+    flutter_click_button(page, "EN")
+    page.wait_for_timeout(2000)
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "switch_language_en.png"))
 
-    Description (*Mô tả*):
-        Log in → click "EN" button → verify UI switches to English.
-        (*Đăng nhập → click nút "EN" → kiểm tra giao diện chuyển sang tiếng Anh.*)
-
-    Suggested steps (*Gợi ý*):
-        1. login(page, test_config)
-        2. Find "EN" button and click (*Tìm nút "EN" và click*)
-        3. Wait 2s, re-enable semantics (*Đợi 2s, bật lại semantics*)
-        4. Get sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-        5. Assert: "Logout" or "Borrow" or "Library" in sem_text
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Assert: Giao diện hiển thị tiếng Anh
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    english_keywords = ["Logout", "Borrow", "Library", "Search", "Return", "Available"]
+    has_english = any(word in sem_text for word in english_keywords)
+    assert has_english, \
+        f"TC-12 FAIL: Giao diện chưa chuyển sang tiếng Anh. Nội dung: {sem_text[:200]}"
