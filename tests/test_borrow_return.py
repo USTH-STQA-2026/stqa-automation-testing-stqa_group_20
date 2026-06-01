@@ -25,7 +25,7 @@ def test_borrow_book(page, test_config):
         (*Đăng nhập → tìm sách "Có sẵn" → click "Mượn sách này" → xác nhận dialog
         → kiểm tra sách chuyển sang trạng thái "Đang mượn".*)
     """
-    # Arrange: Đăng nhập bằng tài khoản chưa mượn sách (dam.tran@email.com)
+    # Arrange: Đăng nhập bằng tài khoản chưa mượn sách (dam.tran@email.com) để test mượn sách
     page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
     enable_flutter_semantics(page)
     flutter_fill(page, "Email", "dam.tran@email.com")
