@@ -10,13 +10,13 @@
 
 ## RATING
 
-| Front | Rating |
+| Area | Rating |
 |---|---|
-| Completeness (12 TCs) | GREEN |
-| Oracle quality | AMBER (strong but uneven) |
-| Flutter-Web technique | GREEN |
-| Coverage vs SRS | AMBER (happy-path heavy) |
-| Code hygiene | AMBER (minor) |
+| All 12 tests done | Good |
+| Checks are correct | Okay — strong in some, weak in others |
+| Flutter/web handling | Good |
+| How much is tested | Okay — only easy cases |
+| Clean code | Okay — small issues |
 
 ## GOOD POINTS
 
