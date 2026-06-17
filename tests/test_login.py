@@ -1,114 +1,81 @@
-"""
-Login Tests (*Kiểm thử Đăng nhập*) — Library Book Borrowing System (*Hệ thống Mượn sách thư viện*)
+"""Login tests (*Kiểm thử Đăng nhập*) — Library Book Borrowing System.
 
-📖 Textbook concepts in this file:
-   - RIPR Model (Ch.2): See [R], [I], [P], [R✓] comments in TC-01
-   - Data-Driven Testing / @parametrize (Ch.3 §3.3.2): See hint in TC-02/TC-03
-
-This file contains 1 completed example (TC-01).
-Students must complete TC-02 and TC-03.
-
-(*File này chứa 1 ví dụ mẫu (TC-01) đã hoàn chỉnh.
-Sinh viên cần hoàn thành TC-02 và TC-03.*)
+Covers TC-01..TC-03 plus a librarian-login variant. Assertions are
+bilingual-tolerant because the app ships both Vietnamese and English UI text.
 """
 import os
 import pytest
 from conftest import enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter, SCREENSHOT_DIR
 
 
-def test_login_success(page, test_config):
-    """TC-01: Login success with valid credentials (*Đăng nhập thành công với thông tin hợp lệ*)
+def _wait_for_error(page, *texts, timeout=10000):
+    """Smart wait for any of the given error strings (no fixed sleep)."""
+    selector = ", ".join(f'flt-semantics:has-text("{t}")' for t in texts)
+    page.locator(selector).first.wait_for(state="attached", timeout=timeout)
+    enable_flutter_semantics(page)
 
-    ✅ COMPLETED — Use as a reference example.
-    (*ĐÃ HOÀN THÀNH — Dùng làm ví dụ tham khảo.*)
 
-    📖 RIPR Model (Textbook Ch.2 — Reachability → Infection → Propagation → Revealability):
-        Mỗi dòng code trong test tương ứng với 1 bước trong chuỗi RIPR.
-        Xem comment [R], [I], [P], [R✓] bên dưới.
-    """
-    # [R] Reachability: Truy cập trang đăng nhập — chạm tới UI cần test
+def _open_login(page, test_config):
     page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
     enable_flutter_semantics(page)
 
-    # [I] Infection: Nhập dữ liệu hợp lệ — kích hoạt logic đăng nhập trong hệ thống
+
+def test_login_success(page, test_config):
+    """TC-01: Login succeeds with valid credentials."""
+    _open_login(page, test_config)
     flutter_fill(page, "Email", test_config["email"])
     flutter_fill(page, "Mật khẩu", test_config["password"])
     flutter_click_button(page, "Đăng nhập")
 
-    # [P] Propagation: Chờ trạng thái lan truyền ra UI — nút "Đăng xuất" xuất hiện
-    # (Smart Wait: thay vì time.sleep(5) — nhanh hơn và ổn định hơn)
     wait_for_flutter(page, text="Đăng xuất")
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_success.png"))
 
-    # [R✓] Revealability: Kiểm tra kết quả — Test Oracle phát hiện lỗi nếu có
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    has_user_name = test_config["display_name"] in sem_text
-    has_logout = "Đăng xuất" in sem_text or "Logout" in sem_text
-    assert has_user_name or has_logout, \
-        f"Login failed: '{test_config['display_name']}' or Logout button not found " \
-        f"(Đăng nhập không thành công: không tìm thấy tên hoặc nút Đăng xuất)"
+    assert test_config["display_name"] in sem_text or "Đăng xuất" in sem_text or "Logout" in sem_text, \
+        f"Login failed: display name or logout control not found. Got: {sem_text[:300]}"
 
 
 def test_login_fail_wrong_password(page, test_config):
-    """TC-02: Login fail – wrong password (*Đăng nhập thất bại – sai mật khẩu*)
+    """TC-02: Login fails with a valid email but wrong password."""
+    _open_login(page, test_config)
+    flutter_fill(page, "Email", test_config["email"])
+    flutter_fill(page, "Mật khẩu", "wrongpassword")
+    flutter_click_button(page, "Đăng nhập")
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
+    _wait_for_error(page, "Mật khẩu không đúng", "Incorrect password")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-02_login_wrong_password.png"))
 
-    Description (*Mô tả*):
-        Enter correct email but wrong password → system stays on login page
-        or shows an error message.
-        (*Nhập email đúng nhưng mật khẩu sai → hệ thống không chuyển trang,
-        hoặc hiển thị thông báo lỗi.*)
-
-    📖 RIPR — Áp dụng cho test case này:
-        [R] page.goto(...) → Chạm tới trang đăng nhập
-        [I] flutter_fill(..., "wrongpassword") → Nhiễm trạng thái lỗi
-        [P] Hệ thống xử lý login → Lỗi lan truyền ra thông báo
-        [R✓] assert ... → Test Oracle kiểm tra thông báo lỗi
-
-    💡 Bonus B2 — Data-Driven Testing:
-        TC-02 và TC-03 có cùng pattern (nhập → click → kiểm tra lỗi).
-        Bạn có thể gộp bằng @pytest.mark.parametrize:
-
-        @pytest.mark.parametrize("email, password, tc_id", [
-            ("valid@email.com", "wrongpass", "TC-02"),
-            ("", "", "TC-03"),
-        ])
-        def test_login_fail(page, test_config, email, password, tc_id):
-            ...
-
-        Xem thêm: docs/textbook-concepts.md §3 (Data-Driven Testing)
-
-    Suggested steps (*Gợi ý các bước*):
-        1. Navigate to login page (*Truy cập trang đăng nhập*)
-        2. Enable Flutter semantics (*Bật Flutter semantics*)
-        3. Enter correct Email (from test_config["email"]) (*Nhập Email đúng*)
-        4. Enter wrong Password (e.g. "wrongpassword") (*Nhập Mật khẩu sai*)
-        5. Click "Đăng nhập" (*Click "Đăng nhập"*)
-        6. Assert: URL still on login page OR error message shown
-           (*Assert: URL vẫn ở trang đăng nhập HOẶC có thông báo lỗi*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Mật khẩu không đúng" in sem_text or "Incorrect password" in sem_text, \
+        f"Expected wrong-password error. Got: {sem_text[:300]}"
+    assert "Đăng xuất" not in sem_text, "Should not be logged in after wrong password"
 
 
 def test_login_fail_empty_fields(page, test_config):
-    """TC-03: Login fail – empty fields (*Đăng nhập thất bại – để trống các trường*)
+    """TC-03: Login fails when both fields are empty."""
+    _open_login(page, test_config)
+    flutter_click_button(page, "Đăng nhập")
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
+    _wait_for_error(page, "Vui lòng nhập email", "Please enter email and password")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-03_login_empty_fields.png"))
 
-    Description (*Mô tả*):
-        Leave all fields empty, click Login → system stays on login page.
-        (*Không nhập gì, bấm Đăng nhập → hệ thống không chuyển trang.*)
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Vui lòng nhập email" in sem_text or "Please enter email and password" in sem_text, \
+        f"Expected empty-field validation. Got: {sem_text[:300]}"
+    assert "Đăng xuất" not in sem_text, "Should not be logged in when fields are empty"
 
-    Suggested steps (*Gợi ý các bước*):
-        1. Navigate to login page (*Truy cập trang đăng nhập*)
-        2. Enable Flutter semantics (*Bật Flutter semantics*)
-        3. Do NOT enter Email/Password — click "Đăng nhập" immediately
-           (*KHÔNG nhập Email/Mật khẩu — click "Đăng nhập" ngay*)
-        4. Assert: URL still on login page (*Assert: URL vẫn ở trang đăng nhập*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+
+def test_login_success_librarian(page, test_config):
+    """TC-01 (variant): Librarian account shows name/role and the logout control."""
+    _open_login(page, test_config)
+    flutter_fill(page, "Email", "librarian@library.com")
+    flutter_fill(page, "Mật khẩu", "admin123")
+    flutter_click_button(page, "Đăng nhập")
+
+    wait_for_flutter(page, text="Đăng xuất")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-01-librarian_login.png"))
+
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Nguyễn Thủ Thư" in sem_text or "Librarian" in sem_text, \
+        f"Expected librarian name/role in AppBar. Got: {sem_text[:300]}"
+    assert "Đăng xuất" in sem_text, "Logout button should be visible after login"

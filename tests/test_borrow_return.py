@@ -1,91 +1,82 @@
-"""
-Borrow & Return Tests (*Kiểm thử Mượn & Trả sách*) — Library Book Borrowing System (*Hệ thống Mượn sách thư viện*)
+"""Borrow & return tests (*Kiểm thử Mượn & Trả sách*) — TC-08..TC-10.
 
-Students must complete ALL 3 test cases in this file.
-(*Sinh viên cần hoàn thành TẤT CẢ 3 test case trong file này.*)
-
-Hints (*Gợi ý*):
-    - Use login() helper to log in (*Dùng login() helper để đăng nhập*)
-    - "Mượn / Trả" tab: role="tab", aria-label="Mượn / Trả"
-    - Available books have "Có sẵn" in aria-label, borrowed books have "Đang mượn"
-      (*Sách "Có sẵn" có aria-label chứa "Có sẵn", sách "Đang mượn" chứa "Đang mượn"*)
-    - Borrow button: 'flt-semantics[role="button"]:has-text("Mượn sách này")'
-      (*Nút mượn*)
-    - After clicking "Mượn sách này", a confirmation dialog appears — click "Mượn" again
-      (*Sau khi click "Mượn sách này" sẽ hiện dialog xác nhận — cần click nút "Mượn" lần nữa*)
-    - Return button: 'flt-semantics[role="button"]:has-text("Trả sách")'
-      (*Nút trả*)
+Accounts:
+    - TC-08 uses dam.tran@email.com (no active borrows — a clean slate for borrowing).
+    - TC-09/TC-10 use test_config (ba.nguyen@email.com, MEM002, currently borrowing BOOK003).
 """
 import os
-import time
-import pytest
+from playwright.sync_api import expect
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
-    login, SCREENSHOT_DIR,
+    wait_for_flutter, login, SCREENSHOT_DIR,
 )
+
+BORROW_TAB = 'flt-semantics[role="tab"][aria-label="Mượn / Trả"]'
+
+
+def _login_as(page, base_url, email, password):
+    page.goto(base_url, wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+    flutter_fill(page, "Email", email)
+    flutter_fill(page, "Mật khẩu", password)
+    flutter_click_button(page, "Đăng nhập")
+    wait_for_flutter(page, text="Đăng xuất")
+    enable_flutter_semantics(page)
+
+
+def _open_borrow_tab(page):
+    page.locator(BORROW_TAB).first.click()
+    enable_flutter_semantics(page)
 
 
 def test_borrow_book(page, test_config):
-    """TC-08: Borrow an available book (*Mượn sách có trạng thái 'Có sẵn'*)
+    """TC-08: Borrowing an available book succeeds and creates a borrow record."""
+    _login_as(page, test_config["base_url"], "dam.tran@email.com", "password123")
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    # Borrow the first available book via the button inside its card.
+    book_card = page.locator('flt-semantics[role="group"][aria-label*="Có sẵn"]').first
+    book_card.wait_for(state="attached", timeout=10000)
+    book_card.get_by_role("button", name="Mượn sách này").first.click()
 
-    Description (*Mô tả*):
-        Log in → find an "Available" book → click "Mượn sách này" → confirm dialog
-        → verify book status changes to "Borrowed".
-        (*Đăng nhập → tìm sách "Có sẵn" → click "Mượn sách này" → xác nhận dialog
-        → kiểm tra sách chuyển sang trạng thái "Đang mượn".*)
+    # Confirm in the dialog. exact=True avoids matching "Mượn sách này" / the "Mượn / Trả" tab.
+    wait_for_flutter(page, text="Xác nhận")
+    page.get_by_role("button", name="Mượn", exact=True).click()
 
-    Suggested steps (*Gợi ý các bước*):
-        1. login(page, test_config)
-        2. Find available book: page.locator('flt-semantics[role="group"][aria-label*="Có sẵn"]')
-           (*Tìm sách Có sẵn*)
-        3. Click "Mượn sách này" button inside that book card
-           (*Click nút "Mượn sách này" trong sách đó*)
-        4. Wait for confirmation dialog, re-enable semantics
-           (*Đợi dialog xác nhận, bật lại semantics*)
-        5. Click "Mượn" button (confirm button in dialog)
-           (*Click nút "Mượn" — nút xác nhận trong dialog*)
-        6. Assert: "Đang mượn" or "thành công" appears
-           (*Assert: "Đang mượn" hoặc "thành công" xuất hiện*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Primary oracle: explicit success toast.
+    wait_for_flutter(page, text="thành công")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "borrow_book_success.png"))
+
+    # Status lives in the group's aria-label (seed records) or its text (fresh records).
+    _open_borrow_tab(page)
+    record = page.locator(
+        'flt-semantics[role="group"][aria-label*="Đang mượn"], '
+        'flt-semantics[role="group"]:has-text("Đang mượn")'
+    ).first
+    expect(record, "TC-08: no 'Đang mượn' borrow record after borrowing").to_be_visible()
 
 
 def test_view_borrowed_books(page, test_config):
-    """TC-09: View borrowed books list (*Xem danh sách sách đang mượn — tab Mượn / Trả*)
+    """TC-09: The Mượn / Trả tab lists the member's borrowed book."""
+    login(page, test_config)
+    _open_borrow_tab(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "view_borrowed_books.png"))
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
-
-    Description (*Mô tả*):
-        Log in → switch to "Mượn / Trả" tab → verify borrowed books are shown.
-        (*Đăng nhập → chuyển sang tab "Mượn / Trả" → kiểm tra có sách đang mượn.*)
-
-    Hints (*Gợi ý*):
-        - Click tab: page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
-        - Verify: books with "Đang mượn" in aria-label, or "Trả sách" button exists
-          (*Kiểm tra: có sách với aria-label chứa "Đang mượn" hoặc có nút "Trả sách"*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    record = page.locator('flt-semantics[role="group"][aria-label*="Đang mượn"]').first
+    expect(record, "TC-09: no borrowed book shown in Mượn / Trả tab").to_be_visible()
 
 
 def test_return_book(page, test_config):
-    """TC-10: Return a borrowed book (*Trả sách đang mượn*)
+    """TC-10: Returning a borrowed book updates its record to 'Đã trả'."""
+    login(page, test_config)
+    _open_borrow_tab(page)
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    return_btn = page.locator('flt-semantics[role="button"]:has-text("Trả sách")').first
+    return_btn.wait_for(state="attached", timeout=10000)
+    return_btn.click()
 
-    Description (*Mô tả*):
-        Log in → go to "Mượn / Trả" tab → click "Trả sách" → verify book is returned.
-        (*Đăng nhập → tab "Mượn / Trả" → click "Trả sách" → kiểm tra sách được trả.*)
+    wait_for_flutter(page, text="thành công")
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "return_book_success.png"))
 
-    Hints (*Gợi ý*):
-        - Switch to "Mượn / Trả" tab (*Chuyển tab "Mượn / Trả"*)
-        - Find return button: page.locator('flt-semantics[role="button"]:has-text("Trả sách")')
-          (*Tìm nút "Trả sách"*)
-        - Click and verify status change or success message
-          (*Click và kiểm tra sách chuyển trạng thái hoặc có thông báo thành công*)
-    """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    returned = page.locator('flt-semantics').filter(has_text="Đã trả").first
+    expect(returned, "TC-10: returned record does not show 'Đã trả'").to_be_visible()
